@@ -61,7 +61,7 @@
 
         <section>
           <h2>I. Código base (Codebase)</h2>
-          <blockquote style="font-size: 80%">Un código base sobre el que hacer el control de versiones y multiples despliegues</blockquote>
+          <blockquote style="font-size: 80%">Un código base sobre el que hacer el control de versiones y múltiples despliegues</blockquote>
           <p>
             <img width="50%" height="50%" data-src="manydeploys.png" alt="Many Deploys">
           </p>
@@ -240,7 +240,7 @@ RUN ./manage.py compilemessages
           <blockquote style="font-size: 80%">Publicar servicios mediante asignación de puertos</blockquote>
           <ul>
             <li class="fragment">Exponer los servicios vía un puerto (habitualmente HTTP)</li>
-            <li class="fragment">Evitar mod_wsgi u otras opciones donde nuestro códio corre dentro de Apache u otro web server</li>
+            <li class="fragment">Evitar mod_wsgi u otras opciones donde nuestro código corre dentro de Apache u otro web server</li>
             <li class="fragment">Evitar el modelo de PHP corriendo dentro de Apache o Java apps corriendo en Tomcat</li>
           </ul>
         </section>
@@ -249,7 +249,7 @@ RUN ./manage.py compilemessages
           <blockquote style="font-size: 80%">Escalar mediante el modelo de procesos</blockquote>
           <ul>
             <li class="fragment">Evitar threads</li>
-            <li class="fragment">Con Kubernetes, el modelo a seguir es un proceso por container, múltiples réplicas</li>
+            <li class="fragment">Con Kubernetes, la recomendación es un proceso por container, múltiples réplicas</li>
             <li class="fragment">Celery para long-running background tasks</li>
             <li class="fragment">Considerar <em>gevent</em></li>
           </ul>
