@@ -1,49 +1,434 @@
 <!doctype html>
 <html>
-	<head>
-		<meta charset="utf-8">
-		<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 
-		<title>reveal.js</title>
+    <title>reveal.js</title>
 
-		<link rel="stylesheet" href="css/reset.css">
-		<link rel="stylesheet" href="css/reveal.css">
-		<link rel="stylesheet" href="css/theme/black.css">
+    <link rel="stylesheet" href="css/reset.css">
+    <link rel="stylesheet" href="css/reveal.css">
+    <link rel="stylesheet" href="css/theme/solarized.css">
 
-		<!-- Theme used for syntax highlighting of code -->
-		<link rel="stylesheet" href="lib/css/monokai.css">
+    <!-- Theme used for syntax highlighting of code -->
+    <link rel="stylesheet" href="lib/css/zenburn.css">
 
-		<!-- Printing and PDF exports -->
-		<script>
-			var link = document.createElement( 'link' );
-			link.rel = 'stylesheet';
-			link.type = 'text/css';
-			link.href = window.location.search.match( /print-pdf/gi ) ? 'css/print/pdf.css' : 'css/print/paper.css';
-			document.getElementsByTagName( 'head' )[0].appendChild( link );
-		</script>
-	</head>
-	<body>
-		<div class="reveal">
-			<div class="slides">
-				<section>Slide 1</section>
-				<section>Slide 2</section>
-			</div>
-		</div>
+    <!-- Printing and PDF exports -->
+    <script>
+      var link = document.createElement( 'link' );
+      link.rel = 'stylesheet';
+      link.type = 'text/css';
+      link.href = window.location.search.match( /print-pdf/gi ) ? 'css/print/pdf.css' : 'css/print/paper.css';
+      document.getElementsByTagName( 'head' )[0].appendChild( link );
+    </script>
+  </head>
+  <body>
+    <div class="reveal">
+      <div class="slides">
+        <section>
+          <h1>Twelve Factor con Python</h1>
+          <p>
+            <small>Por <a href="http://twitter.com/gnarvaja">@gnarvaja</a> de <a href="http://radiocut.fm">http://radiocut.fm</a></small>
+          </p>
+          <p>
+            <a href="http://radiocut.fm">
+              <img width="96" height="96" data-src="radio_cut_96.png" alt="RadioCut">
+            </a>
+          </p>
+        </section>
+        <section>
+          <h2>RadioCut</h2>
+          <ul>
+            <li><i>"donde la radio se hace viral, on-demand y social"</i></li>
+            <li>2M visitas por mes</li>
+            <li>1.5M horas escuchadas por mes</li>
+            <li>Usamos: Django, Flask, Google Cloud</li>
+            <li>Sobre mí: pythonista desde 2004 / "empresario" o "co-founder"</li>
+          </ul>
+        </section>
+        <section>
+          <h2 style="text-transform: none">The Twelve Factor App</h2>
+          <ul>
+            <li class="fragment"><a href="https://12factor.net/es/">https://12factor.net/es/</a></li>
+            <li class="fragment">Guía para el desarrollo de <em>web apps</em> o <em>(micro)servicios</em></li>
+            <li class="fragment">Formatos <strong>declarativos</strong> para automatización de la configuración</li>
+            <li class="fragment">Contrato claro con el sistema operativo, máxima <strong>portabilidad</strong></li>
+            <li class="fragment">Cloud enabled (Docker / Kubernetes)</li>
+            <li class="fragment">Mínimizan diferencias entre entornos de desarrollo y producción</li>
+            <li class="fragment">Escalan horizontalmente</li>
+          </ul>
+        </section>
 
-		<script src="js/reveal.js"></script>
+        <section>
+          <h2>I. Código base (Codebase)</h2>
+          <blockquote style="font-size: 80%">Un código base sobre el que hacer el control de versiones y multiples despliegues</blockquote>
+          <p>
+            <img width="50%" height="50%" data-src="manydeploys.png" alt="Many Deploys">
+          </p>
+        </section>
+        <section>
+          <h2>II. Dependencias</h2>
+          <blockquote style="font-size: 80%">Declarar y aislar explícitamente las dependencias</blockquote>
+          <ul>
+            <li class="fragment"><strong>pip</strong> para instalación de dependencias</li>
+            <li class="fragment"><strong>virtualenv / venv</strong> para aislar varios proyectos en la misma máquina</li>
+            <li class="fragment">Limitaciones de pip</li>
+            <li class="fragment"><strong>Docker</strong> para mayor aislación y portabilidad</li>
+          </ul>
+        </section>
+        <section>
+          <h2 style="text-transform: none">requirements.txt</h2>
+          <pre style="width: 95%"><code data-trim contenteditable style="font-size: 22px;">Django==2.2
+djangorestframework==3.10
+gunicorn[gevent]
+celery[redis]
+mysqlclient
+django-mysql
+requests&gt;=2.18.0,&lt;3
+json-logging-py
+environs
+django-ipware
+geoip2
+kombu==4.6.4
+-e git+https://github.com/gnarvaja/python-redis-rate-limit#egg=python-redis-rate-limit-20191011
+          </code></pre>
+        </section>
+        <section>
+          <h2 style="text-transform: none">dev_requirements.txt</h2>
+          <pre style="width: 95%"><code data-trim contenteditable style="font-size: 22px;">ipdb
+ipython
+rpdb
+colorama
+factory_boy
+freezegun
+coverage
+responses
+</code></pre>
+        </section>
+        <section>
+          <h2 style="text-transform: none">Dockerfile</h2>
+          <pre style="width: 95%"><code data-trim contenteditable style="font-size: 22px;" class="dockerfile">FROM python:3-alpine
 
-		<script>
-			// More info about config & dependencies:
-			// - https://github.com/hakimel/reveal.js#configuration
-			// - https://github.com/hakimel/reveal.js#dependencies
-			Reveal.initialize({
-				dependencies: [
-					{ src: 'plugin/markdown/marked.js' },
-					{ src: 'plugin/markdown/markdown.js' },
-					{ src: 'plugin/notes/notes.js', async: true },
-					{ src: 'plugin/highlight/highlight.js', async: true }
-				]
-			});
-		</script>
-	</body>
+RUN apk add --no-cache jpeg-dev zlib-dev \
+    &amp;&amp; apk add --no-cache --virtual .build-deps build-base \
+                              linux-headers \
+    &amp;&amp; pip install --no-cache-dir --upgrade pip \
+    &amp;&amp; pip install --no-cache-dir Pillow \
+                Flask \
+                gunicorn[gevent] \
+                google-cloud-storage \
+    &amp;&amp; apk del .build-deps
+</code></pre>
+        </section>
+        <section>
+          <h2>III. Configuraciones</h2>
+          <blockquote style="font-size: 80%">Guardar la configuración en el entorno</blockquote>
+          <ul>
+            <li class="fragment">Qué es configuración y qué código?</li>
+            <li class="fragment">Entorno vs. archivos</li>
+            <li class="fragment">Granularidad</li>
+            <li class="fragment">Dockerfile y .env</li>
+            <li class="fragment">Librería recomendada: https://pypi.org/project/environs/</li>
+          </ul>
+        </section>
+        <section>
+          <h2 style="text-transform: none">environs</h2>
+          <pre style="width: 95%"><code data-trim contenteditable class="python" style="font-size: 22px;">from environs import Env
+env = Env()
+
+BASE_URL = env.str("BASE_URL", "https://radiocut.fm")
+FREE_TRIAL_DAYS = env.int("FREE_TRIAL_DAYS", 7)
+DEBUG = env.bool("DEBUG", False)
+SECRET = env("SECRET")  # =&gt; raises error if not set
+COMPLEX_CONFIG = env.json("COMPLEX_CONFIG")
+</code></pre>
+        </section>
+        <section>
+          <h2>IV. Backing services</h2>
+          <blockquote style="font-size: 80%">Tratar a los “backing services” como recursos conectables</blockquote>
+          <ul>
+            <li class="fragment">Backing services: DB, Rabbit, SMTP, etc.</li>
+            <li class="fragment">Sin distinción entre servicios locales o externos, ni propios o ajenos</li>
+            <li class="fragment">Todo conectado por configuración</li>
+            <li class="fragment">docker-compose para entorno local</li>
+          </ul>
+        </section>
+        <section>
+          <h2 style="text-transform: none">docker-compose.yml</h2>
+          <pre style="width: 95%"><code data-trim contenteditable class="yaml" style="font-size: 18px;">
+version: "3"
+
+services:
+  django:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: userservice
+    env_file: .env
+    depends_on:
+      - mysql
+    expose:
+      - "8000"
+    ports:
+      - 8000:8000
+    networks:
+      - composedevenv_ggnet
+  celery:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: userservice-celery
+    command: ["sh", "-c", "celery worker -A ggUserService.celery -Q userService -l info --concurrency=20"]
+    env_file: .env
+    depends_on:
+      - mysql
+    networks:
+      - composedevenv_ggnet
+  mysql:
+    image: mariadb:10.2.12
+    container_name: mysql
+    environment:
+      MYSQL_DATABASE: ${MYSQL_DBNAME}
+      MYSQL_USER: ${MYSQL_USER}
+      MYSQL_PASSWORD: ${MYSQL_PASSWORD}
+      MYSQL_RANDOM_ROOT_PASSWORD: 1
+    networks:
+      - composedevenv_ggnet
+networks:
+  composedevenv_ggnet:
+    external: true   # Uses external network with Redis cluster created by k8s-cluster/compose-dev-env/
+</code></pre>
+        </section>
+        <section>
+          <h2>V. Construir, desplegar, ejecutar</h2>
+          <blockquote style="font-size: 80%">Separar completamente la etapa de construcción de la etapa de ejecución</blockquote>
+          <p>
+            <img width="80%" height="60%" data-src="build-release-run.png" alt="Build release run">
+          </p>
+        </section>
+        <section>
+          <h2 style="text-transform: none">Docker/K8s y django</h2>
+          <pre style="width: 95%"><code data-trim contenteditable class="dockerfile" style="font-size: 18px;">
+...
+ENV STATIC_ROOT /static
+RUN ./manage.py collectstatic
+RUN ./manage.py compilemessages
+...
+</code></pre>
+          <pre style="width: 95%"><code data-trim contenteditable class="yaml" style="font-size: 18px;">
+...
+      initContainers:
+      - name: run-db-migration
+        image: gcr.io/my-service:0.1.54
+        command: ['./manage.py migrate']
+...
+</code></pre>
+        </section>
+        <section>
+          <h2>VI. Procesos</h2>
+          <blockquote style="font-size: 80%">Ejecutar la aplicación como uno o más procesos <strong>sin estado</strong></blockquote>
+          <ul>
+            <li class="fragment">HTTP es stateless, esto es fácil no?</li>
+            <li class="fragment"><em>Share nothing</em></li>
+            <li class="fragment">Sesiones: usar la BD or Redis, nunca archivos o memoria</li>
+            <li class="fragment">ImageField y FileField en Django</li>
+            <li class="fragment"><a href="https://django-storages.readthedocs.io/en/latest/backends/gcloud.html">Django Storages</a></li>
+          </ul>
+        </section>
+        <section>
+          <h2>VII. Port binding</h2>
+          <blockquote style="font-size: 80%">Publicar servicios mediante asignación de puertos</blockquote>
+          <ul>
+            <li class="fragment">Exponer los servicios vía un puerto (habitualmente HTTP)</li>
+            <li class="fragment">Evitar mod_wsgi u otras opciones donde nuestro códio corre dentro de Apache u otro web server</li>
+            <li class="fragment">Evitar el modelo de PHP corriendo dentro de Apache o Java apps corriendo en Tomcat</li>
+          </ul>
+        </section>
+        <section>
+          <h2>VIII. Concurrencia</h2>
+          <blockquote style="font-size: 80%">Escalar mediante el modelo de procesos</blockquote>
+          <ul>
+            <li class="fragment">Evitar threads</li>
+            <li class="fragment">Con Kubernetes, el modelo a seguir es un proceso por container, múltiples réplicas</li>
+            <li class="fragment">Celery para long-running background tasks</li>
+            <li class="fragment">Considerar <em>gevent</em></li>
+          </ul>
+        </section>
+        <section>
+          <h2 style="text-transform: lowercase">gunicorn[gevent]</h2>
+          <ul>
+            <li class="fragment">Cómo funciona?</li>
+            <li class="fragment">Escalar dentro de un proceso, sin los problemas de los threads</li>
+            <li class="fragment">Sirve si la app es <em>I/O bounded</em></li>
+            <li class="fragment"><a href="https://pypi.org/project/psycogreen/">psycogreen</a></li>
+          </ul>
+        </section>
+        <section>
+          <h2>IX. Desechabilidad</h2>
+          <blockquote style="font-size: 80%">Hacer el sistema más robusto intentando conseguir inicios rápidos y finalizaciones seguras</blockquote>
+          <ul>
+            <li class="fragment">Minimizar tiempo de startup</li>
+            <li class="fragment">Compilación de assets u otras tareas de inicio, al build</li>
+            <li class="fragment">Manejo de SIGTERM y muerte súbita</li>
+          </ul>
+        </section>
+        <section>
+          <h2>X. Paridad en desarrollo y producción</h2>
+          <blockquote style="font-size: 80%">Mantener desarrollo, preproducción y producción tan parecidos como sea posible</blockquote>
+        </section>
+        <section>
+          <h2>Los tres gaps</h2>
+          <ol>
+            <li class="fragment">Gap de tiempo</li>
+            <li class="fragment">Gap de personal</li>
+            <li class="fragment">Gap de herramientas</li>
+          </ol>
+          <p class="fragment">Mi solución: Docker en desarrollo y Kubernetes en producción</p>
+        </section>
+        <section>
+          <h2 style="text-transform: none">Docker en desarrollo - docker-compose.override.dev.yml</h2>
+          <pre style="width: 95%"><code data-trim contenteditable class="yaml" style="font-size: 18px;">
+version: "3"
+services:
+  django:
+    command: ["sh", "-c", "/start-dev.sh; while [ 0 ]; do date; sleep 30 ; done"]
+    build:
+      args:
+        DEV_ENV: "1"
+    volumes:
+      - ./ggUserService:/usr/local/app/
+  celery:
+    command: ["sh", "-c", "while [ 0 ]; do date; sleep 30 ; done"]
+    build:
+      args:
+        DEV_ENV: "1"
+    volumes:
+      - ./ggUserService:/usr/local/app/
+    ports:
+      - 4445:4444
+  mysql:
+    volumes:
+      - /mnt/memdisk:/var/lib/mysql/
+      - ./mysql/:/etc/mysql/conf.d/
+</code></pre>
+        </section>
+        <section>
+          <h2 style="text-transform: none">Docker en desarrollo</h2>
+          <pre style="width: 95%"><code data-trim contenteditable class="dockerfile" style="font-size: 22px;">
+...
+# Installs some utils for debugging
+ARG DEV_ENV="0"
+RUN if [ $DEV_ENV -ne 0 ]; then pip install ipdb rpdb colorama; fi
+...
+</code></pre>
+        </section>
+        <section>
+          <h2 style="text-transform: none">Docker en desarrollo - make.sh</h2>
+          <pre style="width: 95%"><code data-trim contenteditable class="bash" style="font-size: 18px;">
+case $COMMAND in
+    run-gunicorn)
+        docker exec -it userservice /usr/local/bin/gunicorn \
+            --config /usr/local/app/gunicorn.conf -b :8000 ggUserService.wsgi:application
+        ;;
+
+    run-django|django)
+        docker exec -it userservice ./manage.py runserver 0:8000
+        ;;
+
+    run-djshell|djshell)
+        docker exec -it userservice ./manage.py shell
+        ;;
+
+    run-manage|manage)
+        docker exec -it userservice ./manage.py $*
+        exit 0
+        ;;
+
+    test)
+        docker exec -it userservice ./manage.py test
+        exit 0
+        ;;
+</code></pre>
+        </section>
+        <section>
+          <h2>XI. Logs</h2>
+          <blockquote style="font-size: 80%">Tratar los logs como un stream de eventos</blockquote>
+          <ul>
+            <li class="fragment">No ocuparse del storage o ruteo de los logs</li>
+            <li class="fragment">Emitir a salida standard</li>
+            <li class="fragment">La captura de los logs es responsabilidad del entorno de ejecución</li>
+            <li class="fragment">StackDriver / Elastic Stack (LogStash / Filebeat / Fluentd)</li>
+            <li class="fragment">Logs estructurados con <em>structlog</em></li>
+          </ul>
+        </section>
+        <section>
+          <h2 style="text-transform: none">structlog</h2>
+          <pre style="width: 95%"><code data-trim contenteditable class="python" style="font-size: 18px;">&gt;&gt;&gt; from structlog import get_logger
+&gt;&gt;&gt; log = get_logger()
+&gt;&gt;&gt; log.info("key_value_logging", out_of_the_box=True, effort=0)
+2016-04-20 16:20.13 key_value_logging              effort=0 out_of_the_box=True
+&gt;&gt;&gt; log = log.bind(user="anonymous", some_key=23)
+&gt;&gt;&gt; log = log.bind(user="hynek", another_key=42)
+&gt;&gt;&gt; log.info("user.logged_in", happy=True)
+2016-04-20 16:20.13 user.logged_in                 another_key=42 happy=True some_key=23 user='hynek'
+</code></pre>
+        </section>
+        <section>
+          <h2 style="text-transform: none">structlog</h2>
+          <pre style="width: 95%"><code data-trim contenteditable class="python" style="font-size: 18px;"># structlog setup
+# http://www.structlog.org/en/16.0.0/standard-library.html#suggested-configuration
+import structlog   # noqa
+
+structlog.configure(
+    processors=[
+        structlog.stdlib.filter_by_level,
+        structlog.stdlib.add_logger_name,
+        structlog.stdlib.add_log_level,
+        structlog.stdlib.PositionalArgumentsFormatter(),
+        structlog.processors.TimeStamper(fmt="iso"),
+        structlog.processors.StackInfoRenderer(),
+        structlog.processors.format_exc_info,
+        structlog.dev.ConsoleRenderer()
+            if env.bool("DEV_ENV", False) else structlog.processors.JSONRenderer()
+    ],
+    context_class=dict,
+    logger_factory=structlog.stdlib.LoggerFactory(),
+    wrapper_class=structlog.stdlib.BoundLogger,
+    cache_logger_on_first_use=True,
+)
+</code></pre>
+        </section>
+        <section>
+          <h2>XII. Admin processes</h2>
+          <blockquote style="font-size: 80%">Ejecutar las tareas de gestión/administración en la misma imagen, como procesos que empiezan y terminan</blockquote>
+          <ul>
+            <li class="fragment">Ej: los comandos de Django que se incluyen en el código</li>
+            <li class="fragment">En Kubernetes CronJobs sobre la misma imagen / configuración</li>
+          </ul>
+        </section>
+        <section>
+          <h2>¿Preguntas?</h2>
+        </section>
+        <section>
+          <h2>Gracias!</h2>
+        </section>
+      </div>
+    </div>
+
+    <script src="js/reveal.js"></script>
+
+    <script>
+      // More info about config & dependencies:
+      // - https://github.com/hakimel/reveal.js#configuration
+      // - https://github.com/hakimel/reveal.js#dependencies
+      Reveal.initialize({
+        dependencies: [
+          { src: 'plugin/markdown/marked.js' },
+          { src: 'plugin/markdown/markdown.js' },
+          { src: 'plugin/notes/notes.js', async: true },
+          { src: 'plugin/highlight/highlight.js', async: true }
+        ]
+      });
+    </script>
+  </body>
 </html>
