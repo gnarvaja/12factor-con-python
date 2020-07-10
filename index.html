@@ -4,11 +4,11 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 
-    <title>reveal.js</title>
+    <title>Twelve Factor con Python</title>
 
     <link rel="stylesheet" href="css/reset.css">
     <link rel="stylesheet" href="css/reveal.css">
-    <link rel="stylesheet" href="css/theme/solarized.css">
+    <link rel="stylesheet" href="css/theme/black.css">
 
     <!-- Theme used for syntax highlighting of code -->
     <link rel="stylesheet" href="lib/css/zenburn.css">
@@ -32,7 +32,7 @@
           </p>
           <p>
             <a href="http://radiocut.fm">
-              <img width="96" height="96" data-src="radio_cut_96.png" alt="RadioCut">
+              <img width="96" height="96" data-src="radio_cut_96.png" style="border: 0; background: transparent" alt="RadioCut">
             </a>
           </p>
         </section>
@@ -41,14 +41,14 @@
           <ul>
             <li><i>"donde la radio se hace viral, on-demand y social"</i></li>
             <li>2M visitas por mes</li>
-            <li>1.5M horas escuchadas por mes</li>
-            <li>Usamos: Django, Flask, Google Cloud</li>
+            <li>1.6M horas escuchadas por mes</li>
+            <li>Usamos: Django, Flask, Google Cloud, IBM Cloud</li>
             <li>Sobre mí: pythonista desde 2004 / "empresario" o "co-founder"</li>
           </ul>
         </section>
         <section>
           <h2 style="text-transform: none">The Twelve Factor App</h2>
-          <ul>
+          <ul style="font-size: 90%">
             <li class="fragment"><a href="https://12factor.net/es/">https://12factor.net/es/</a></li>
             <li class="fragment">Guía para el desarrollo de <em>web apps</em> o <em>(micro)servicios</em></li>
             <li class="fragment">Formatos <strong>declarativos</strong> para automatización de la configuración</li>
@@ -138,9 +138,18 @@ env = Env()
 
 BASE_URL = env.str("BASE_URL", "https://radiocut.fm")
 FREE_TRIAL_DAYS = env.int("FREE_TRIAL_DAYS", 7)
-DEBUG = env.bool("DEBUG", False)
+APP_ENV = env.str("APP_ENV", "production")
+DEBUG = env.bool("DEBUG", APP_ENV != "production")
 SECRET = env("SECRET")  # =&gt; raises error if not set
 COMPLEX_CONFIG = env.json("COMPLEX_CONFIG")
+DATABASES = {
+    'default': env.dj_db("DB_DEFAULT")
+}
+TWITTER_AUTHS = env.ext_file("TWITTER_AUTHS", {})
+</code></pre>
+          <pre style="width: 95%"><code data-trim contenteditable style="font-size: 22px;">DB_DEFAULT: postgres://${PGUSER:-gnarvaja}:${PGPASS}@radiocut-pg-cluster-pooler/radiocut
+DICT_VARIABLE: max_error_count=100,timeout=600
+SLAVE_DATABASES: default,replica,replica
 </code></pre>
         </section>
         <section>
@@ -230,7 +239,7 @@ RUN ./manage.py compilemessages
           <ul>
             <li class="fragment">HTTP es stateless, esto es fácil no?</li>
             <li class="fragment"><em>Share nothing</em></li>
-            <li class="fragment">Sesiones: usar la BD or Redis, nunca archivos o memoria</li>
+            <li class="fragment">Sesiones: usar la BD o Redis, nunca archivos o memoria</li>
             <li class="fragment">ImageField y FileField en Django</li>
             <li class="fragment"><a href="https://django-storages.readthedocs.io/en/latest/backends/gcloud.html">Django Storages</a></li>
           </ul>
@@ -250,7 +259,7 @@ RUN ./manage.py compilemessages
           <ul>
             <li class="fragment">Evitar threads</li>
             <li class="fragment">Con Kubernetes, la recomendación es un proceso por container, múltiples réplicas</li>
-            <li class="fragment">Celery para long-running background tasks</li>
+            <li class="fragment">Celery para long-running background tasks (-P solo)</li>
             <li class="fragment">Considerar <em>gevent</em></li>
           </ul>
         </section>
@@ -291,69 +300,54 @@ RUN ./manage.py compilemessages
 version: "3"
 services:
   django:
-    command: ["sh", "-c", "/start-dev.sh; while [ 0 ]; do date; sleep 30 ; done"]
+    command: ["sh", "-c", "while [ 0 ]; do date; sleep 30 ; done"]
     build:
       args:
-        DEV_ENV: "1"
+        APP_ENV: "development"
     volumes:
       - ./ggUserService:/usr/local/app/
   celery:
     command: ["sh", "-c", "while [ 0 ]; do date; sleep 30 ; done"]
     build:
       args:
-        DEV_ENV: "1"
+        APP_ENV: "development"
     volumes:
       - ./ggUserService:/usr/local/app/
     ports:
       - 4445:4444
-  mysql:
+  postgres:
     volumes:
-      - /mnt/memdisk:/var/lib/mysql/
-      - ./mysql/:/etc/mysql/conf.d/
+      - /mnt/memdisk:/var/lib/postgresql/data
 </code></pre>
         </section>
         <section>
           <h2 style="text-transform: none">Docker en desarrollo</h2>
           <pre style="width: 95%"><code data-trim contenteditable class="dockerfile" style="font-size: 22px;">
 ...
-# Installs some utils for debugging
-ARG DEV_ENV="0"
-RUN if [ $DEV_ENV -ne 0 ]; then pip install ipdb rpdb colorama; fi
+ARG APP_ENV="production"
+ENV APP_ENV $APP_ENV
+
+RUN if [ $APP_ENV != "production" ]; then pip install -r /testing_deps.txt; fi
+ADD docker/run-manage-in-build.sh /run-manage-in-build.sh
 ...
 </code></pre>
         </section>
         <section>
-          <h2 style="text-transform: none">Docker en desarrollo - make.sh</h2>
+          <h2 style="text-transform: none">Docker en desarrollo - Trabajar cómodo</h2>
           <pre style="width: 95%"><code data-trim contenteditable class="bash" style="font-size: 18px;">
-case $COMMAND in
-    run-gunicorn)
-        docker exec -it userservice /usr/local/bin/gunicorn \
-            --config /usr/local/app/gunicorn.conf -b :8000 ggUserService.wsgi:application
-        ;;
-
-    run-django|django)
-        docker exec -it userservice ./manage.py runserver 0:8000
-        ;;
-
-    run-djshell|djshell)
-        docker exec -it userservice ./manage.py shell
-        ;;
-
-    run-manage|manage)
-        docker exec -it userservice ./manage.py $*
-        exit 0
-        ;;
-
-    test)
-        docker exec -it userservice ./manage.py test
-        exit 0
-        ;;
+pip install inv-py-docker-k8s-tasks
+inv start-dev
+inv django
+inv pyshell
+inv djshell
+inv manage migrate
 </code></pre>
         </section>
         <section>
           <h2>XI. Logs</h2>
           <blockquote style="font-size: 80%">Tratar los logs como un stream de eventos</blockquote>
           <ul>
+            <li class="fragment">import logging</li>
             <li class="fragment">No ocuparse del storage o ruteo de los logs</li>
             <li class="fragment">Emitir a salida standard</li>
             <li class="fragment">La captura de los logs es responsabilidad del entorno de ejecución</li>
@@ -404,6 +398,7 @@ structlog.configure(
           <ul>
             <li class="fragment">Ej: los comandos de Django que se incluyen en el código</li>
             <li class="fragment">En Kubernetes CronJobs sobre la misma imagen / configuración</li>
+            <li class="fragment">inv update-templates -a</li>
           </ul>
         </section>
         <section>
